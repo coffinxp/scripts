@@ -39,9 +39,9 @@ def dorks():
     global log_file  # Ensure log_file is accessible globally
     try:
         dork = input(f"{Colors.BLUE}\n[+] Enter The Dork Search Query: {Colors.RESET}")
-        
+
         user_choice = input(f"{Colors.BLUE}[+] Enter Total Number of Results You Want (or type 'all' to fetch everything): {Colors.RESET}").strip().lower()
-        
+
         if user_choice == "all":
             total_results = float("inf")  # Fetch until no more results
         else:
@@ -52,7 +52,7 @@ def dorks():
             except ValueError:
                 print(f"{Colors.RED}[ERROR] Invalid number entered! Please enter a positive integer or 'all'.{Colors.RESET}")
                 return
-        
+
         save_output = input(f"{Colors.BLUE}\n[+] Do You Want to Save the Output? (Y/N): {Colors.RESET}").strip().lower()
         if save_output == "y":
             log_file = input(f"{Colors.BLUE}[+] Enter Output Filename: {Colors.RESET}").strip()
@@ -60,35 +60,28 @@ def dorks():
                 log_file = "dorks_output.txt"
             if not log_file.endswith(".txt"):
                 log_file += ".txt"
-        
+
         print(f"\n{Colors.GREEN}[INFO] Searching... Please wait...{Colors.RESET}\n")
-        
+
         fetched = 0
-        start = 0
-        while fetched < total_results:
-            remaining = min(100, total_results - fetched) if total_results != float("inf") else 100  # Fetch in batches of 100
-            urls_found = False
-            
-            for result in search(dork, num=remaining, start=start):
-                urls_found = True
-                print(f"{Colors.YELLOW}[+] {Colors.RESET}{result}")
-                
-                if save_output == "y":
-                    logger(result)  # Save only the raw URL without numbering
-                
-                fetched += 1
-            
-            if not urls_found:
-                break  # Stop if no more results are returned
-            
-            start += 100  # Move to the next batch
-        
+        for result in search(dork):
+            if fetched >= total_results:
+                break
+
+            print(f"{Colors.YELLOW}[+] {Colors.RESET}{result}")
+
+            if save_output == "y":
+                logger(result)  # Save only the raw URL without numbering
+
+            fetched += 1
+
+
     except KeyboardInterrupt:
         print(f"\n{Colors.RED}[!] User Interruption Detected! Exiting...{Colors.RESET}\n")
         sys.exit(1)
     except Exception as e:
         print(f"{Colors.RED}[ERROR] {str(e)}{Colors.RESET}")
-    
+
     print(f"{Colors.GREEN}\n[✔] Automation Done..{Colors.RESET}")
     sys.exit()
 
