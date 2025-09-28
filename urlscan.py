@@ -5,7 +5,7 @@ import argparse
 import re
 import os
 
-API_KEY = "01980e60-2e2e-70c9-9e89-f5e1aa823851"  # ← Insert your API Key here
+API_KEY = "4b72f1c3-9d4e-4e8a-87a5-2f36c8d4a913"  # ← Insert your API Key here
 
 if not API_KEY:
     print("[ERROR] Please add your API key in the script before running.")
