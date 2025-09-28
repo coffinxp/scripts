@@ -7,6 +7,7 @@ if [ -z "$1" ]; then
   echo "  $0 example.com -s -sc 200"
   echo "  $0 example.com -sc 200,302,403"
   echo "  $0 example.com -scx 404,500"
+  echo "  $0 example.com -e extensions only"
   exit 1
 fi
 
